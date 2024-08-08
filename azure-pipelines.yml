@@ -1,0 +1,59 @@
+trigger: none  # No automatic triggers, only manual or external triggers
+
+pr: none  # Disable pull request triggers
+
+pool:
+  vmImage: 'windows-latest'
+
+variables:
+  buildConfiguration: 'Release'
+  serviceName: 'TestAzurePipeline'  # Change this to your service name
+
+stages:
+- stage: Build
+  jobs:
+  - job: Build
+    steps:
+    - task: Checkout@2
+      displayName: 'Checkout Code'
+      inputs:
+        repository: 'self'
+        clean: true
+
+    - task: VSBuild@1
+      displayName: 'Build Solution'
+      inputs:
+        solution: '**/*.sln'
+        msbuildArgs: '/p:Configuration=$(buildConfiguration)'
+        platform: 'Any CPU'
+        configuration: '$(buildConfiguration)'
+
+    - task: ArchiveFiles@2
+      displayName: 'Publish to ZIP'
+      inputs:
+        rootFolderOrFile: '$(Build.BinariesDirectory)'
+        includeRootFolder: false
+        archiveType: 'zip'
+        archiveFile: '$(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip'
+
+    - publish: $(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip
+      displayName: 'Publish Artifact'
+      artifact: 'drop'
+
+- stage: Deploy
+  jobs:
+  - deployment: DeployToVM
+    environment: 'Staging Servers'  # Replace with your Azure DevOps environment name
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - download: current
+            artifact: drop
+
+          - script: |
+              Expand-Archive -Path "$(Pipeline.Workspace)/drop/$(Build.BuildId).zip" -DestinationPath "C:\testazure"
+              sc.exe delete $(serviceName) || echo "Service does not exist, creating new service"
+              sc.exe create $(serviceName) binPath= "C:\service\YourServiceExecutable.exe" start= auto
+              sc.exe start $(serviceName)
+            displayName: 'Install and Start Windows Service'
