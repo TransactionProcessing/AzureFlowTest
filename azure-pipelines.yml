@@ -59,9 +59,12 @@ stages:
           - download: current
             artifact: drop
 
-          - script: |
-              Expand-Archive -Path "$(Pipeline.Workspace)/drop/$(Build.BuildId).zip" -DestinationPath "C:\testazure"  # Updated destination path
-              sc.exe delete $(serviceName) || echo "Service does not exist, creating new service"
-              sc.exe create $(serviceName) binPath= "C:\testazure\YourServiceExecutable.exe" start= auto
-              sc.exe start $(serviceName)
+          - task: PowerShell@2
             displayName: 'Install and Start TestAzurePipeline Service'
+            inputs:
+              targetType: 'inline'
+              script: |
+                Expand-Archive -Path "$(Pipeline.Workspace)\drop\$(Build.BuildId).zip" -DestinationPath "C:\testazure"
+                sc.exe delete $(serviceName) || echo "Service does not exist, creating new service"
+                sc.exe create $(serviceName) binPath= "C:\testazure\YourServiceExecutable.exe" start= auto
+                sc.exe start $(serviceName)
