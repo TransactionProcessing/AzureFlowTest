@@ -64,7 +64,22 @@ stages:
             inputs:
               targetType: 'inline'
               script: |
-                Expand-Archive -Path "$(Pipeline.Workspace)\drop\$(Build.BuildId).zip" -DestinationPath "C:\testazure"
-                sc.exe delete $(serviceName) || echo "Service does not exist, creating new service"
-                sc.exe create $(serviceName) binPath= "C:\testazure\YourServiceExecutable.exe" start= auto
+                $zipPath = "$(Pipeline.Workspace)\drop\$(Build.BuildId).zip"
+                $destinationPath = "C:\testazure"
+                
+                # Create destination path if it does not exist
+                if (-not (Test-Path -Path $destinationPath)) {
+                  New-Item -Path $destinationPath -ItemType Directory
+                }
+
+                # Expand the archive
+                Expand-Archive -Path $zipPath -DestinationPath $destinationPath -Force
+
+                # Delete existing service if it exists
+                if (Get-Service -Name $(serviceName) -ErrorAction SilentlyContinue) {
+                  sc.exe delete $(serviceName)
+                }
+
+                # Create and start the new service
+                sc.exe create $(serviceName) binPath= "$destinationPath\YourServiceExecutable.exe" start= auto
                 sc.exe start $(serviceName)
