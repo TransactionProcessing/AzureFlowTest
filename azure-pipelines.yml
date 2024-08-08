@@ -7,18 +7,15 @@ pool:
 
 variables:
   buildConfiguration: 'Release'
-  serviceName: 'TestAzurePipeline'  # Change this to your service name
+  serviceName: 'TestAzurePipeline'  # Updated service name
 
 stages:
 - stage: Build
   jobs:
   - job: Build
     steps:
-    - task: Checkout@2
+    - checkout: self
       displayName: 'Checkout Code'
-      inputs:
-        repository: 'self'
-        clean: true
 
     - task: VSBuild@1
       displayName: 'Build Solution'
@@ -43,7 +40,7 @@ stages:
 - stage: Deploy
   jobs:
   - deployment: DeployToVM
-    environment: 'Staging Servers'  # Replace with your Azure DevOps environment name
+    environment: 'Staging Servers'  # Updated environment name
     strategy:
       runOnce:
         deploy:
@@ -52,8 +49,8 @@ stages:
             artifact: drop
 
           - script: |
-              Expand-Archive -Path "$(Pipeline.Workspace)/drop/$(Build.BuildId).zip" -DestinationPath "C:\testazure"
+              Expand-Archive -Path "$(Pipeline.Workspace)/drop/$(Build.BuildId).zip" -DestinationPath "C:\testazure"  # Updated destination path
               sc.exe delete $(serviceName) || echo "Service does not exist, creating new service"
-              sc.exe create $(serviceName) binPath= "C:\service\YourServiceExecutable.exe" start= auto
+              sc.exe create $(serviceName) binPath= "C:\testazure\YourServiceExecutable.exe" start= auto
               sc.exe start $(serviceName)
-            displayName: 'Install and Start Windows Service'
+            displayName: 'Install and Start TestAzurePipeline Service'
