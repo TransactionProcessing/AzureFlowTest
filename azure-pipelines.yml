@@ -51,9 +51,9 @@ stages:
 - stage: Deploy
   jobs:
   - deployment: DeployToVM
-    environment: 
-      name: 'Staging'  # Specify the environment name
-      resourceType: 'DeploymentGroup'  # Set to DeploymentGroup for using a deployment group
+    environment:
+      name: 'Staging'  # Environment name in Azure DevOps
+      resourceType: 'VirtualMachine'  # Specify as a VM if deployment group is not selectable
     strategy:
       runOnce:
         deploy:
