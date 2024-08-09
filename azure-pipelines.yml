@@ -2,9 +2,6 @@ trigger: none  # No automatic triggers, only manual or external triggers
 
 pr: none  # Disable pull request triggers
 
-pool:
-  vmImage: 'windows-latest'
-
 variables:
   buildConfiguration: 'Release'
   serviceName: 'TestAzurePipeline'
@@ -14,6 +11,8 @@ stages:
 - stage: Build
   jobs:
   - job: Build
+    pool:
+      vmImage: 'windows-latest'  # VM image specified for the build job
     steps:
     - checkout: self
       displayName: 'Checkout Code'
@@ -53,7 +52,7 @@ stages:
 - stage: Deploy
   jobs:
   - deployment: DeployToEnvironment
-    environment: 'Staging'  # Ensure this environment exists and matches your Azure DevOps environment configuration
+    environment: 'Staging'  # Ensure this matches your Azure DevOps environment configuration
     strategy:
       runOnce:
         deploy:
