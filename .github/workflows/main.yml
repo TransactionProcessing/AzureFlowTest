@@ -1,0 +1,57 @@
+name: Publish and Deploy .NET Core Application
+
+on:
+  workflow_dispatch:  # Allows manual triggering of the workflow
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Restore dependencies
+        run: dotnet restore TransactionProcessor.HealthChecksUI/TransactionProcessor.HealthChecksUI.sln
+
+      - name: Build the application
+        run: dotnet build dotnet build TransactionProcessor.HealthChecksUI/TransactionProcessor.HealthChecksUI.sln --configuration Release --no-restore
+
+      - name: Publish the application
+        run: dotnet publish "TransactionProcessor.HealthChecksUI/TransactionProcessor.HealthChecksUI/TransactionProcessor.HealthChecksUI.csproj" --configuration Release --output TransactionProcessor.HealthChecksUI/publishOutput -r win-x64 --self-contained
+
+      - name: Zip the published files
+        run: zip -r healthchecksui.zip ./TransactionProcessor.HealthChecksUI/publishOutput/*
+
+      - name: Upload the artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: healthchecksui
+          path: healthchecksui.zip
+
+  deploy:
+    runs-on: self-hosted
+    needs: build
+
+    steps:
+      - name: Download the artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: myapp
+
+      - name: Unzip the files
+        run: |
+          Expand-Archive -Path healthchecksui.zip -DestinationPath "C:\testrelease\healchecksui" -Force
+      
+      - name: Install as a Windows service
+        run: |
+          $serviceName = "Test Health UI"
+          $servicePath = "C:\testrelease\healchecksui\TransactionProcessor.HealthChecksUI.exe"
+          if (Get-Service -Name $serviceName -ErrorAction SilentlyContinue) {
+            Stop-Service -Name $serviceName
+            Set-Service -Name $serviceName -Binary $servicePath
+            Start-Service -Name $serviceName
+          } else {
+            New-Service -Name $serviceName -Binary $servicePath -Description "TransactionProcessor.HealthChecksUI" -DisplayName "TransactionProcessor.HealthChecksUI Test" -StartupType Automatic
+            Start-Service -Name $serviceName
+          }
