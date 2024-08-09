@@ -15,7 +15,7 @@ jobs:
         run: dotnet restore TransactionProcessor.HealthChecksUI/TransactionProcessor.HealthChecksUI.sln
 
       - name: Build the application
-        run: dotnet build dotnet build TransactionProcessor.HealthChecksUI/TransactionProcessor.HealthChecksUI.sln --configuration Release --no-restore
+        run: dotnet build TransactionProcessor.HealthChecksUI/TransactionProcessor.HealthChecksUI.sln --configuration Release --no-restore
 
       - name: Publish the application
         run: dotnet publish "TransactionProcessor.HealthChecksUI/TransactionProcessor.HealthChecksUI/TransactionProcessor.HealthChecksUI.csproj" --configuration Release --output TransactionProcessor.HealthChecksUI/publishOutput -r win-x64 --self-contained
