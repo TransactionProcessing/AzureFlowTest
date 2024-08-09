@@ -58,3 +58,31 @@ jobs:
           }
           New-Service -Name $serviceName -BinaryPathName $servicePath -Description "TransactionProcessor.HealthChecksUI" -DisplayName "TransactionProcessor.HealthChecksUI Test" -StartupType Automatic
           Start-Service -Name $serviceName          
+
+  deployproduction:
+    runs-on: productionserver
+    needs: build
+    environment: production
+    
+    steps:
+      - name: Download the artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: healthchecksui
+
+      - name: Unzip the files
+        run: |
+          Expand-Archive -Path healthchecksui.zip -DestinationPath "C:\testrelease\healchecksui" -Force
+      
+      - name: Install as a Windows service
+        run: |
+          $serviceName = "Test Health UI"
+          $servicePath = "C:\testrelease\healchecksui\TransactionProcessor.HealthChecksUI.exe"
+          
+          # Check if the service exists
+          if (Get-Service -Name $serviceName -ErrorAction SilentlyContinue) {
+            Stop-Service -Name $serviceName
+            sc.exe delete $serviceName
+          }
+          New-Service -Name $serviceName -BinaryPathName $servicePath -Description "TransactionProcessor.HealthChecksUI" -DisplayName "TransactionProcessor.HealthChecksUI Test" -StartupType Automatic
+          Start-Service -Name $serviceName          
