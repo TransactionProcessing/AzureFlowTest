@@ -6,7 +6,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-
+    name: "Create the Release Package"
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -31,10 +31,11 @@ jobs:
           name: healthchecksui
           path: healthchecksui.zip
 
-  deploy:
+  deploystaging:
     runs-on: stagingserver
     needs: build
     environment: staging
+    name: "Deploy to Staging"
     
     steps:
       - name: Download the artifact
@@ -61,8 +62,9 @@ jobs:
 
   deployproduction:
     runs-on: productionserver
-    needs: build
+    needs: [build, deploystaging]
     environment: production
+    name: "Deploy to Production"
     
     steps:
       - name: Download the artifact
