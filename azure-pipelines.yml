@@ -7,7 +7,7 @@ pool:
 
 variables:
   buildConfiguration: 'Release'
-  serviceName: 'TestAzurePipeline'  # Service name
+  serviceName: 'TestAzurePipeline'  # Updated service name
 
 stages:
 - stage: Build
@@ -51,9 +51,7 @@ stages:
 - stage: Deploy
   jobs:
   - deployment: DeployToVM
-    environment:
-      name: 'Staging'  # Environment name in Azure DevOps
-      resourceType: 'VirtualMachine'  # Specify as a VM if deployment group is not selectable
+    environment: 'Staging'  # Updated environment name
     strategy:
       runOnce:
         deploy:
