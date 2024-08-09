@@ -32,9 +32,10 @@ jobs:
           path: healthchecksui.zip
 
   deploy:
-    runs-on: self-hosted
+    runs-on: stagingserver
     needs: build
-
+    environment: staging
+    
     steps:
       - name: Download the artifact
         uses: actions/download-artifact@v3
