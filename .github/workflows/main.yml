@@ -49,11 +49,11 @@ jobs:
         run: |
           $serviceName = "Test Health UI"
           $servicePath = "C:\testrelease\healchecksui\TransactionProcessor.HealthChecksUI.exe"
+          
+          # Check if the service exists
           if (Get-Service -Name $serviceName -ErrorAction SilentlyContinue) {
             Stop-Service -Name $serviceName
-            Set-Service -Name $serviceName -BinaryPathName $servicePath
-            Start-Service -Name $serviceName
-          } else {
-            New-Service -Name $serviceName -BinaryPathName $servicePath -Description "TransactionProcessor.HealthChecksUI" -DisplayName "TransactionProcessor.HealthChecksUI Test" -StartupType Automatic
-            Start-Service -Name $serviceName
+            sc.exe delete $serviceName
           }
+          New-Service -Name $serviceName -BinaryPathName $servicePath -Description "TransactionProcessor.HealthChecksUI" -DisplayName "TransactionProcessor.HealthChecksUI Test" -StartupType Automatic
+          Start-Service -Name $serviceName          
