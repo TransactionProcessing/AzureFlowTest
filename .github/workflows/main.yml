@@ -37,7 +37,7 @@ jobs:
       - name: Download the artifact
         uses: actions/download-artifact@v3
         with:
-          name: myapp
+          name: healthchecksui
 
       - name: Unzip the files
         run: |
