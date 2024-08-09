@@ -7,7 +7,7 @@ pool:
 
 variables:
   buildConfiguration: 'Release'
-  serviceName: 'TestAzurePipeline'  # Updated service name
+  serviceName: 'TestAzurePipeline'
   publishDirectory: '$(Build.ArtifactStagingDirectory)/publish'
 
 stages:
@@ -22,7 +22,7 @@ stages:
       displayName: 'Install .NET Core SDK'
       inputs:
         packageType: 'sdk'
-        version: '8.x'  # Specify the version you need
+        version: '8.x'
 
     - task: NuGetCommand@2
       displayName: 'Restore NuGet Packages'
@@ -34,7 +34,7 @@ stages:
       inputs:
         command: 'publish'
         publishWebProjects: false
-        projects: 'TransactionProcessor.HealthChecksUI/TransactionProcessor.HealthChecksUI.sln'  # Specify the solution file
+        projects: 'TransactionProcessor.HealthChecksUI/TransactionProcessor.HealthChecksUI.sln'
         arguments: '--configuration $(buildConfiguration) --output $(publishDirectory)'
         zipAfterPublish: false
 
@@ -52,8 +52,8 @@ stages:
 
 - stage: Deploy
   jobs:
-  - deployment: DeployToVM
-    environment: 'Staging'  # Updated environment name
+  - deployment: DeployToEnvironment
+    environment: 'Staging'  # Ensure this environment exists and matches your Azure DevOps environment configuration
     strategy:
       runOnce:
         deploy:
@@ -66,11 +66,10 @@ stages:
             inputs:
               targetType: 'inline'
               script: |
-                Write-Host "Deploying to machine: $env:COMPUTERNAME"
-                
+                Write-Host "Deploying to Environment: Staging"
+                Write-Host "Machine Name: $env:AGENT_MACHINENAME"  # Log the agent machine name for troubleshooting
                 $zipPath = "$(Pipeline.Workspace)\published-drop\$(Build.BuildId)_Published.zip"
                 $destinationPath = "C:\testazure"
-                Write-Host "Artifact path: $zipPath"
                 
                 # Create destination path if it does not exist
                 if (-not (Test-Path -Path $destinationPath)) {
