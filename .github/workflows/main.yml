@@ -21,7 +21,9 @@ jobs:
         run: dotnet publish "TransactionProcessor.HealthChecksUI/TransactionProcessor.HealthChecksUI/TransactionProcessor.HealthChecksUI.csproj" --configuration Release --output TransactionProcessor.HealthChecksUI/publishOutput -r win-x64 --self-contained
 
       - name: Zip the published files
-        run: zip -r healthchecksui.zip ./TransactionProcessor.HealthChecksUI/publishOutput/*
+        run: |
+          cd ./TransactionProcessor.HealthChecksUI/publishOutput
+          zip -r ../../healthchecksui.zip ./*
 
       - name: Upload the artifact
         uses: actions/upload-artifact@v3
