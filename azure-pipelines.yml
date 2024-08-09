@@ -8,6 +8,7 @@ pool:
 variables:
   buildConfiguration: 'Release'
   serviceName: 'TestAzurePipeline'  # Updated service name
+  publishDirectory: '$(Build.ArtifactStagingDirectory)/publish'
 
 stages:
 - stage: Build
@@ -26,27 +27,28 @@ stages:
     - task: NuGetCommand@2
       displayName: 'Restore NuGet Packages'
       inputs:
-        restoreSolution: '**/*.sln'
+        restoreSolution: 'TransactionProcessor.HealthChecksUI/TransactionProcessor.HealthChecksUI.sln'
 
-    - task: VSBuild@1
-      displayName: 'Build Solution'
+    - task: DotNetCoreCLI@2
+      displayName: 'Publish .NET Core Application'
       inputs:
-        solution: '**/*.sln'
-        msbuildArgs: '/p:Configuration=$(buildConfiguration)'
-        platform: 'Any CPU'
-        configuration: '$(buildConfiguration)'
+        command: 'publish'
+        publishWebProjects: false
+        projects: 'TransactionProcessor.HealthChecksUI/TransactionProcessor.HealthChecksUI.sln'  # Specify the solution file
+        arguments: '--configuration $(buildConfiguration) --output $(publishDirectory)'
+        zipAfterPublish: false
 
     - task: ArchiveFiles@2
-      displayName: 'Publish to ZIP'
+      displayName: 'Zip Published Output'
       inputs:
-        rootFolderOrFile: '$(Build.BinariesDirectory)'
+        rootFolderOrFile: '$(publishDirectory)'
         includeRootFolder: false
         archiveType: 'zip'
-        archiveFile: '$(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip'
+        archiveFile: '$(Build.ArtifactStagingDirectory)/$(Build.BuildId)_Published.zip'
 
-    - publish: $(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip
+    - publish: $(Build.ArtifactStagingDirectory)/$(Build.BuildId)_Published.zip
       displayName: 'Publish Artifact'
-      artifact: 'drop'
+      artifact: 'published-drop'
 
 - stage: Deploy
   jobs:
@@ -57,14 +59,14 @@ stages:
         deploy:
           steps:
           - download: current
-            artifact: drop
+            artifact: published-drop
 
           - task: PowerShell@2
             displayName: 'Install and Start TestAzurePipeline Service'
             inputs:
               targetType: 'inline'
               script: |
-                $zipPath = "$(Pipeline.Workspace)\drop\$(Build.BuildId).zip"
+                $zipPath = "$(Pipeline.Workspace)\published-drop\$(Build.BuildId)_Published.zip"
                 $destinationPath = "C:\testazure"
                 
                 # Create destination path if it does not exist
